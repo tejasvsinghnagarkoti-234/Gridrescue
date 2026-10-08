@@ -28,3 +28,13 @@ Consumer::Consumer(int id, string name, int requiredPower, int priority)
     this->requiredPower = requiredPower;
     this->priority = priority;
 }
+
+#include "TransmissionLine.h"
+
+TransmissionLine::TransmissionLine(int from, int to, int distance)
+{
+    this->from = from;
+    this->to = to;
+    this->distance = distance;
+    this->active = true;
+}
