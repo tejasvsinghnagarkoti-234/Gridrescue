@@ -51,7 +51,6 @@ public:
     int requiredPower;
     int priority;
 
-    Consumer(int id, string name, int requiredPower, int priority);
 };
 
 #endif
