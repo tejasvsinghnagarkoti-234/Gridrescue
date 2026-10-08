@@ -14,7 +14,7 @@ public:
 
     PowerStation(int id, string name, int capacity);
 };
-
+https://github.com/tejasvsinghnagarkoti-234/Gridrescue/tree/main
 #endif
 
 #ifndef SUBSTATION_H
@@ -55,3 +55,30 @@ public:
 };
 
 #endif
+#ifndef TRANSMISSIONLINE_H
+#define TRANSMISSIONLINE_H
+
+class TransmissionLine
+{
+public:
+    int from;
+    int to;
+    int distance;
+    bool active;
+
+    TransmissionLine(int from, int to, int distance);
+};
+
+#endif
+ss
+#include "TransmissionLine.h"
+
+TransmissionLine::TransmissionLine(int from, int to, int distance)
+{
+    this->from = from;
+    this->to = to;
+    this->distance = distance;
+    this->active = true;
+}
+
+
