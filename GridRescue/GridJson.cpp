@@ -1,5 +1,4 @@
-// JSON API layer used by the web frontend. Reuses GridManager's real logic
-// (graph, BFS, DFS, Dijkstra, stack, priority queue).
+
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -41,14 +40,12 @@ static string trimmed(string s)
     return s;
 }
 
-// {"ok":..., "message":"...", <extra>}
+
 static string result(bool ok, const string &msg, const string &extra = "")
 {
     return string("{\"ok\":") + (ok ? "true" : "false") + ",\"message\":" + q(msg) +
            (extra.empty() ? "" : "," + extra) + "}";
 }
-
-// Captures anything written to std::cout while alive.
 struct CoutCapture
 {
     ostringstream ss;
@@ -225,7 +222,7 @@ string GridManager::apiRedistribute()
           << ",\"budget\":" << r.groupBudget[k] << ",\"supplied\":" << r.groupSupplied[k] << "}";
     }
     o << "],\"idle\":[";
-    // Working power stations that are not wired to any substation.
+    
     bool first = true;
     for(size_t i = 0; i < stations.size(); i++)
     {
@@ -247,7 +244,7 @@ string GridManager::apiSearch(const string &name)
     auto it = components.find(name);
     if(it == components.end())
     {
-        // case-insensitive fallback
+        
         string low = name;
         transform(low.begin(), low.end(), low.begin(), ::tolower);
         for(auto &kv : components)
