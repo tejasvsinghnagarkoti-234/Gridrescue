@@ -8,8 +8,7 @@ using namespace std;
 
 vector<int> bfs(Graph &g, int start, vector<bool> failed);
 
-// Multi-source BFS: every start node is enqueued at level 0.
-// Used when the grid has more than one power station.
+
 vector<int> bfsMulti(Graph &g, const vector<int> &starts, vector<bool> failed);
 
 vector<int> dfs(Graph &g, int start, vector<bool> failed);
