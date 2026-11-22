@@ -57,8 +57,7 @@ vector<int> FailureManager::history() const
     return out;
 }
 
-// Removes every entry for `id` while keeping the order of the others.
-// Needed when a failed node is deleted from the map.
+
 void FailureManager::remove(int id)
 {
     stack<int> kept;
