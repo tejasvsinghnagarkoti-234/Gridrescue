@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GridRescue — Power Grid Control</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+    <div><h1>GridRescue</h1><span>Power grid failure &amp; recovery simulator</span></div>
+  </div>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <!-- Start from a preset or a blank canvas -->
+  <section class="card full">
+    <div class="card-h">
+      <h2>Start from</h2>
+      <span class="sub-hint">Load a preset or start with an empty map, then edit it with the tools below.</span>
+    </div>
+    <div class="config-controls">
+      <button id="blankBtn" class="btn">Blank canvas</button>
+      <div class="presets">
+        <span class="lbl-inline">Preset with</span>
+        <button type="button" class="preset-btn" data-n="2">2</button>
+        <button type="button" class="preset-btn" data-n="4">4</button>
+        <button type="button" class="preset-btn" data-n="6">6</button>
+        <button type="button" class="preset-btn" data-n="8">8</button>
+        <button type="button" class="preset-btn" data-n="12">12</button>
+        <button type="button" class="preset-btn" data-n="16">16</button>
+        <button type="button" class="preset-btn" data-n="20">20</button>
+        <span class="lbl-inline">substations, or</span>
+        <div class="input-inline">
+          <input type="number" id="substationCount" min="2" max="20" value="4" aria-label="Number of substations">
+          <button id="applyCountBtn" class="btn">Load</button>
+        </div>
+      </div>
+    </div>
+    <div id="configError" class="config-error" hidden></div>
+  </section>
+
+  <!-- Editable grid map -->
+  <section class="card map-card main-col">
+    <div class="card-h">
+      <h2>Grid map</h2>
+      <div class="legend">
+        <i class="dot src"></i>Power station <i class="dot ok"></i>Online <i class="dot warn"></i>Cut off <i class="dot bad"></i>Failed <i class="dot hl"></i>Highlight
+      </div>
+    </div>
+
+    <div class="toolbar" role="toolbar" aria-label="Map tools">
+      <div class="tools">
+        <button class="tool" data-mode="select" title="Select and move (V)">
+          <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-2 6z"/></svg>Select<kbd>V</kbd></button>
+        <button class="tool" data-mode="station" title="Place a power station (P)">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M13 7l-4 6h3l-1 4 4-6h-3z"/></svg>Power station<kbd>P</kbd></button>
+        <button class="tool" data-mode="substation" title="Place a substation (S)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>Substation<kbd>S</kbd></button>
+        <button class="tool" data-mode="connect" title="Connect two nodes with a line (C)">
+          <svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7 16 17 8"/></svg>Connect<kbd>C</kbd></button>
+        <button class="tool" data-mode="fail" title="Fail or restore a node (F)">
+          <svg viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/></svg>Fail<kbd>F</kbd></button>
+        <button class="tool" data-mode="remove" title="Delete a node or line (D)">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Delete<kbd>D</kbd></button>
+      </div>
+      <label class="tool-dist">New line length
+        <span><input type="number" id="toolDist" min="1" max="1000" placeholder="auto"> km</span>
+      </label>
+    </div>
+
+    <svg id="map" viewBox="0 0 1000 560" role="img" aria-label="Editable power grid map">
+      <defs>
+        <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+          <circle cx="10" cy="10" r="1"/>
+        </pattern>
+      </defs>
+      <rect class="canvas-bg" width="1000" height="560" fill="url(#gridDots)"/>
+      <g id="edgesLayer"></g>
+      <g id="nodesLayer"></g>
+      <g id="overlayLayer"></g>
+    </svg>
+    <p class="hint" id="hint" aria-live="polite"></p>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="inspector" aria-live="polite"></section>
+
+    <section class="card">
+      <h2>Failures</h2>
+      <div class="btn-row" id="failBtns"></div>
+      <div class="btn-row">
+        <button id="undoBtn" class="btn">↶ Undo latest</button>
+        <button id="restoreBtn" class="btn ghost">Restore all</button>
+      </div>
+      <div class="stack-wrap">
+        <span class="lbl">Failure stack (top →)</span>
+        <div id="stack" class="stack"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Analysis</h2>
+      <button id="bfsBtn" class="btn wide">Find affected areas <small>BFS</small></button>
+      <div class="pair">
+        <label>From <select id="from"></select></label>
+        <label>To <select id="to"></select></label>
+      </div>
+      <div class="btn-row">
+        <button id="dfsBtn" class="btn">Check connection <small>DFS</small></button>
+        <button id="pathBtn" class="btn">Shortest path <small>Dijkstra</small></button>
+      </div>
+      <div class="search">
+        <input id="q" placeholder="Search component (e.g. PS1, SS3)" autocomplete="off">
+        <button id="searchBtn" class="btn">Search</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Connect by name</h2>
+      <div class="pair">
+        <label>From <select id="lineFrom"></select></label>
+        <label>To <select id="lineTo"></select></label>
+      </div>
+      <div class="line-add-row">
+        <label>Distance (km) <input type="number" id="lineDist" value="15" min="1" max="1000" step="1"></label>
+        <button id="addLineBtn" class="btn">Connect line</button>
+      </div>
+    </section>
+  </aside>
+
+  <section class="card main-col">
+    <div class="card-h">
+      <h2>Consumers &amp; power distribution</h2>
+      <button id="redistBtn" class="btn primary">⚡ Redistribute power</button>
+    </div>
+    <form id="consumerForm" class="consumer-form">
+      <label>Name <input id="cName" placeholder="e.g. Clinic" maxlength="20" required></label>
+      <label>Demand (kW) <input id="cReq" type="number" min="1" max="100000" value="150" required></label>
+      <label>Priority <select id="cPri">
+        <option value="1">1 (most important)</option><option value="2">2</option><option value="3" selected>3</option>
+        <option value="4">4</option><option value="5">5 (least important)</option></select></label>
+      <button class="btn" type="submit">Add consumer</button>
+    </form>
+    <div id="consumers" class="consumers"></div>
+    <div class="grid2">
+      <div><span class="lbl">Substation load</span><div id="loads"></div></div>
+      <div><span class="lbl">Allocation log</span><ul id="alloc" class="alloc"></ul></div>
+    </div>
+  </section>
+
+  <section class="card main-col">
+    <div class="card-h"><h2>Event log</h2><button id="clearLog" class="btn ghost sm">Clear</button></div>
+    <ul id="log" class="log"></ul>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
