@@ -26,7 +26,7 @@ void Graph::display()
 
     for(int i = 0; i < (int)adj.size(); i++)
     {
-        if(names[i].empty()) continue; // unused ID (node was deleted)
+        if(names[i].empty()) continue; 
 
         cout << names[i] << " -> ";
 
