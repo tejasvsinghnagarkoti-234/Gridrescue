@@ -14,8 +14,8 @@ public:
     void addFailure(int id);
     int undoFailure();
     void display();
-    vector<int> history() const; // oldest -> newest
-    void remove(int id);         // drop a node that was deleted from the grid
+    vector<int> history() const; 
+    void remove(int id);         
     bool empty() const;
 };
 
